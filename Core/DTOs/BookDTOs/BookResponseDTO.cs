@@ -1,9 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace Core.Entites
+﻿namespace Core.DTOs.BookDTOs
 {
-    public class Book
+    public class BookResponseDTO
     {
         public int BookId { get; set; }
         public required string Title { get; set; }
@@ -12,8 +9,5 @@ namespace Core.Entites
         public int TotalCopies { get; set; }
         public int AvaliableCopies { get; set; }
         public int? CategoryId { get; set; }
-        [ForeignKey("CategoryId")]
-        public Category? Category { get; set; }
-        public ICollection<Borrowings>? Borrowings { get; set; }
     }
 }
