@@ -5,7 +5,7 @@ namespace Core.Interfaces
 {
     public interface ICategoryRepository
     {
-        Task Add(AddCategoryDTO categoryDTO);
+        Task<int> Add(AddCategoryDTO categoryDTO);
         Task<List<Category>> GetCategories();
         Category? GetById (int id);
         Task<Category?> FindCategory(int id);

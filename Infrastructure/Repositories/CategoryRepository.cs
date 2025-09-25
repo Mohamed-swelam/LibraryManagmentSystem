@@ -14,11 +14,12 @@ namespace Infrastructure.Repositories
         {
             this.context = context;
         }
-        public async Task Add(AddCategoryDTO categoryDTO)
+        public async Task<int> Add(AddCategoryDTO categoryDTO)
         {
             var category = new Category { Name = categoryDTO.Name };
             await context.AddAsync(category);
             await context.SaveChangesAsync();
+            return category.CategoryId;
         }
 
         public async Task DeleteCategory(Category category)

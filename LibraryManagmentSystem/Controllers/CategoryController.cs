@@ -1,7 +1,7 @@
 ﻿using Core.DTOs.BookDTOs;
 using Core.DTOs.CategoryDTOs;
+using Core.Entites;
 using Core.Interfaces;
-using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryManagmentSystem.Controllers
@@ -10,12 +10,10 @@ namespace LibraryManagmentSystem.Controllers
     [ApiController]
     public class CategoryController : ControllerBase
     {
-        private readonly ApplicationDbContext context;
         private readonly ICategoryRepository repository;
 
-        public CategoryController(ApplicationDbContext context, ICategoryRepository repository)
+        public CategoryController(ICategoryRepository repository)
         {
-            this.context = context;
             this.repository = repository;
         }
 
@@ -38,6 +36,7 @@ namespace LibraryManagmentSystem.Controllers
                     Description = book.Description,
                     Title = book.Title,
                     TotalCopies = book.TotalCopies,
+                    CategoryName = category.Name
                 }).ToList() ?? new List<BookResponseDTO>()
             }).ToList();
             return Ok(categories);
@@ -49,7 +48,7 @@ namespace LibraryManagmentSystem.Controllers
             if (CategoryId == 0)
                 return BadRequest("InValid CategoryId");
 
-            var categoryFromDb =  repository.GetById(CategoryId);
+            var categoryFromDb = repository.GetById(CategoryId);
             if (categoryFromDb == null)
                 return NotFound("There is no Category With this Id");
 
@@ -66,6 +65,7 @@ namespace LibraryManagmentSystem.Controllers
                     Description = book.Description,
                     Title = book.Title,
                     TotalCopies = book.TotalCopies,
+                    CategoryName = category.Name
                 }).ToList() ?? new List<BookResponseDTO>()
             };
 
@@ -77,16 +77,17 @@ namespace LibraryManagmentSystem.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-
+            int categoryid;
             try
             {
-                await repository.Add(categoryDTO);
+                categoryid= await repository.Add(categoryDTO);
             }
             catch (Exception)
             {
                 return StatusCode(500, "An error occurred while Adding the category.");
             }
-            return Created();
+            var categoryResponse = new CategoryResponseDTO { ID = categoryid, Name = categoryDTO.Name };
+            return CreatedAtAction(nameof(GetCategoryById), new { CategoryId = categoryid}, categoryResponse);
         }
 
         [HttpPut]
