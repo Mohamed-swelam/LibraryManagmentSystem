@@ -23,6 +23,8 @@ builder.Services.AddIdentity<ApplicationUser,IdentityRole>()
 
 
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IBookRepository, BookRepository>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

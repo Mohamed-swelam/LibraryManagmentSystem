@@ -31,12 +31,35 @@ namespace Infrastructure.Repositories
             return newBook.BookId;
         }
 
+        public async Task DeleteBookAsync(Book book)
+        {
+            context.books.Remove(book);
+            await context.SaveChangesAsync();
+        }
+
+        public async Task<Book?> FindBookAsync(int id)
+        {
+            return await context.books.FindAsync(id) ?? null;
+        }
+
+        public async Task<List<Book>> GetAllBooks()
+        {
+            return await context.books.Include(e=>e.Borrowings)
+                .Include(e=>e.Category).ToListAsync();
+        }
+
         public Book? GetBookById(int id)
         {
             var book = context.books.Include(e => e.Category)
                 .Include(e => e.Borrowings)
                 .FirstOrDefault(e => e.BookId == id);
             return book ?? null;
+        }
+
+        public async Task UpdateBook(Book book)
+        {
+            context.books.Update(book);
+            await context.SaveChangesAsync();
         }
     }
 }

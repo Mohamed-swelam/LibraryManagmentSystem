@@ -1,6 +1,5 @@
 ﻿using Core.DTOs.BookDTOs;
 using Core.Interfaces;
-using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryManagmentSystem.Controllers
@@ -10,16 +9,35 @@ namespace LibraryManagmentSystem.Controllers
     public class BookController : ControllerBase
     {
         private readonly IBookRepository bookRepository;
-        private readonly ApplicationDbContext context;
+        private readonly ICategoryRepository categoryRepository;
 
-        public BookController(IBookRepository bookRepository, ApplicationDbContext context)
+        public BookController(IBookRepository bookRepository, ICategoryRepository categoryRepository)
         {
             this.bookRepository = bookRepository;
-            this.context = context;
+            this.categoryRepository = categoryRepository;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllBooks()
+        {
+            var BooksFromDb = await bookRepository.GetAllBooks();
+
+            var Books = BooksFromDb.Select(book => new BookResponseDTO
+            {
+                BookId = book.BookId,
+                Author = book.Author,
+                AvaliableCopies = book.AvaliableCopies,
+                CategoryId = book.CategoryId,
+                CategoryName = book.Category?.Name ?? "No Category",
+                Description = book.Description,
+                Title = book.Title,
+                TotalCopies = book.TotalCopies,
+            }).ToList();
+            return Ok(Books);
         }
 
 
-        [HttpPost("{bookId}")]
+        [HttpGet("{bookId}")]
         public IActionResult GetBookById(int bookId)
         {
             if (bookId <= 0)
@@ -73,7 +91,56 @@ namespace LibraryManagmentSystem.Controllers
             return CreatedAtAction(nameof(GetBookById), new { bookId = BookId }, bookResponse);
         }
 
+        [HttpPut]
+        public async Task<IActionResult> UpdateCategory(recievedBookDTO bookDTO)
+        {
+            var BookFromDb = await bookRepository.FindBookAsync(bookDTO.BookId);
+            if (BookFromDb == null)
+                return NotFound("There is no Book with this Id");
 
-        
+            if (bookDTO.CategoryId is not null)
+            {
+                var category = await categoryRepository.FindCategory(bookDTO.CategoryId.Value);
+                if (category == null)
+                    return NotFound("There is no Category With this id");
+            }
+
+            BookFromDb.Title = bookDTO.Title;
+            BookFromDb.Author = bookDTO.Author;
+            BookFromDb.AvaliableCopies = bookDTO.TotalCopies;
+            BookFromDb.CategoryId = bookDTO.CategoryId;
+            BookFromDb.Description = bookDTO.Description;
+            BookFromDb.TotalCopies = bookDTO.TotalCopies;
+
+            try
+            {
+                await bookRepository.UpdateBook(BookFromDb);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while Updating the book.");
+            }
+            return NoContent();
+        }
+
+
+        [HttpDelete("{BookId}")]
+        public async Task<IActionResult> DeleteBook(int BookId)
+        {
+            var BookFromDb = await bookRepository.FindBookAsync(BookId);
+            if (BookFromDb == null)
+                return NotFound("There is no Book with this Id");
+
+            try
+            {
+                await bookRepository.DeleteBookAsync(BookFromDb);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while Deleting the book.");
+            }
+            return NoContent();
+        }
+
     }
 }

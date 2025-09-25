@@ -65,7 +65,7 @@ namespace LibraryManagmentSystem.Controllers
                     Description = book.Description,
                     Title = book.Title,
                     TotalCopies = book.TotalCopies,
-                    CategoryName = category.Name
+                    CategoryName = categoryFromDb.Name
                 }).ToList() ?? new List<BookResponseDTO>()
             };
 
