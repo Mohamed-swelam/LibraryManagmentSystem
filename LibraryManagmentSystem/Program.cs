@@ -66,6 +66,7 @@ builder.Services.AddIdentity<ApplicationUser,IdentityRole>()
 
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IBorrowRepository, BorrowRepository>();
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JWT"));
 var jwtSettings = builder.Configuration.GetSection("JWT").Get<JwtSettings>()!;
