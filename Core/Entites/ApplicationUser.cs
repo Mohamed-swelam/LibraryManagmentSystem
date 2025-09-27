@@ -16,6 +16,6 @@ namespace Core.Entites
         public DateTime JoinedDate { get; set; }
 
         public ICollection<Borrowings>? Borrowings { get; set; }
-
+        public List<RefreshToken>? RefreshTokens { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using Core.Helpers;
 using Core.Interfaces;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -67,6 +68,9 @@ builder.Services.AddIdentity<ApplicationUser,IdentityRole>()
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IBorrowRepository, BorrowRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JWT"));
 var jwtSettings = builder.Configuration.GetSection("JWT").Get<JwtSettings>()!;
