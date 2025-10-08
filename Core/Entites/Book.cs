@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Core.Entites
 {
@@ -10,7 +9,7 @@ namespace Core.Entites
         public required string Description { get; set; }
         public required string Author { get; set; }
         public int TotalCopies { get; set; }
-        public int AvaliableCopies { get; set; } 
+        public int AvaliableCopies { get; set; }
         public int? CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public Category? Category { get; set; }

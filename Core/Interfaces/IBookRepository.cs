@@ -11,5 +11,7 @@ namespace Core.Interfaces
         Task<Book?> FindBookAsync(int id);
         Task UpdateBook(Book book);
         Task DeleteBookAsync(Book book);
+        Task saveChangesAsync();
+        IQueryable<Book> GetAsQueryable();
     }
 }

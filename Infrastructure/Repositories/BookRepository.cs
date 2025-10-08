@@ -48,12 +48,22 @@ namespace Infrastructure.Repositories
                 .Include(e=>e.Category).ToListAsync();
         }
 
+        public IQueryable<Book> GetAsQueryable()
+        {
+           return  context.books.AsQueryable();
+        }
+
         public Book? GetBookById(int id)
         {
             var book = context.books.Include(e => e.Category)
                 .Include(e => e.Borrowings)
                 .FirstOrDefault(e => e.BookId == id);
             return book ?? null;
+        }
+
+        public async Task saveChangesAsync()
+        {
+            await context.SaveChangesAsync();
         }
 
         public async Task UpdateBook(Book book)

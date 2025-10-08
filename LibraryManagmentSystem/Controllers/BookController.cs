@@ -1,6 +1,13 @@
 ﻿using Core.DTOs.BookDTOs;
+using Core.DTOs.GeneralDTOs;
+using Core.Entites;
+using Core.Helpers;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using System.Linq.Expressions;
+using System.Text.Json;
 
 namespace LibraryManagmentSystem.Controllers
 {
@@ -10,7 +17,7 @@ namespace LibraryManagmentSystem.Controllers
     {
         private readonly IBookRepository bookRepository;
         private readonly ICategoryRepository categoryRepository;
-
+        private const int MaxPageSize = 50;
         public BookController(IBookRepository bookRepository, ICategoryRepository categoryRepository)
         {
             this.bookRepository = bookRepository;
@@ -18,11 +25,23 @@ namespace LibraryManagmentSystem.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllBooks()
+        public async Task<IActionResult> GetAllBooks([FromQuery]GetBooksDTO getBooksDTO)
         {
-            var BooksFromDb = await bookRepository.GetAllBooks();
+            var books = bookRepository.GetAsQueryable();
+            if (getBooksDTO.testFilter != null)
+            {
+                List<FilterCondition>? filters = JsonConvert.DeserializeObject<List<FilterCondition>>(getBooksDTO.testFilter);
+                books = FilterBuilder.ApplyFilter(books, filters);
+            }
+            var totalCount = await books.CountAsync();
+            var pageSize = getBooksDTO.PageSize > MaxPageSize ? MaxPageSize : getBooksDTO.PageSize;
 
-            var Books = BooksFromDb.Select(book => new BookResponseDTO
+            var PaginatedBooks = books
+                                            .Skip((getBooksDTO.PageNumber - 1) * getBooksDTO.PageSize)
+                                            .Take(getBooksDTO.PageSize).ToList();
+
+
+            var Books = PaginatedBooks.Select(book => new BookResponseDTO
             {
                 BookId = book.BookId,
                 Author = book.Author,
@@ -33,7 +52,8 @@ namespace LibraryManagmentSystem.Controllers
                 Title = book.Title,
                 TotalCopies = book.TotalCopies,
             }).ToList();
-            return Ok(Books);
+
+            return Ok(new PagedResult<BookResponseDTO>(Books, totalCount, getBooksDTO.PageNumber, pageSize));
         }
 
 
@@ -91,30 +111,32 @@ namespace LibraryManagmentSystem.Controllers
             return CreatedAtAction(nameof(GetBookById), new { bookId = BookId }, bookResponse);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> UpdateCategory(recievedBookDTO bookDTO)
+        [HttpPut("update-book/{bookId}")]
+        public async Task<IActionResult> UpdateBook(int bookId, [FromBody] JsonElement data)
         {
-            var BookFromDb = await bookRepository.FindBookAsync(bookDTO.BookId);
+            var BookFromDb = await bookRepository.FindBookAsync(bookId);
             if (BookFromDb == null)
                 return NotFound("There is no Book with this Id");
 
-            if (bookDTO.CategoryId is not null)
-            {
-                var category = await categoryRepository.FindCategory(bookDTO.CategoryId.Value);
-                if (category == null)
-                    return NotFound("There is no Category With this id");
-            }
+            var newDat = data.GetRawText();
+            JsonConvert.PopulateObject(newDat, BookFromDb);
 
-            BookFromDb.Title = bookDTO.Title;
-            BookFromDb.Author = bookDTO.Author;
-            BookFromDb.AvaliableCopies = bookDTO.TotalCopies;
-            BookFromDb.CategoryId = bookDTO.CategoryId;
-            BookFromDb.Description = bookDTO.Description;
-            BookFromDb.TotalCopies = bookDTO.TotalCopies;
+            //var jsonDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(data.GetRawText());
+            //foreach (var prop in jsonDict)
+            //{
+            //    var propertyInfo = BookFromDb.GetType()
+            //        .GetProperty(prop.Key, System.Reflection.BindingFlags.IgnoreCase 
+            //        | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
 
+            //    if (propertyInfo != null)
+            //    {
+            //        var convertedValue = Convert.ChangeType(prop.Value, propertyInfo.PropertyType);
+            //        propertyInfo.SetValue(BookFromDb, convertedValue);
+            //    }
+            //}
             try
             {
-                await bookRepository.UpdateBook(BookFromDb);
+                await bookRepository.saveChangesAsync();
             }
             catch (Exception)
             {
